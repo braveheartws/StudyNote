@@ -14,7 +14,7 @@ void func1(int i) {
 	printf("%d\n", i);
 }
 
-int int main(int argc, char const *argv[])
+int main(int argc, char const *argv[])
 {
 	static int static_var = 85;
 	static int static_var2;
