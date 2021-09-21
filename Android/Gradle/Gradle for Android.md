@@ -55,7 +55,7 @@ android {
 }
 
 dependencies {	//依赖包
-    implementation fileTree(dir: "libs", include: ["*.jar"])	//libs目录下所有以.jar结尾的包
+    implementation fileTree(dir: "libs", include: ["*.jar","*.aar"])	//libs目录下所有以.jar结尾的包
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 }
 
