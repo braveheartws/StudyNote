@@ -162,6 +162,109 @@ autowiredService.autowire(thiz);
 		
 ```
 
+#### 3.4 PluginLaunch插件
+
+```groovy
+public void apply(Project project) {
+    def android = project.extensions.getByType(AppExtension)
+    def transformImpl = new RegisterTransform(project)
+    RegisterTransform.registerList = list
+    ...
+    android.registerTransform(transformImpl)	// 将自己的transform注册
+}
+
+
+registerList.each { ext ->
+	RegisterCodeGenerator.insertInitCodeTo(ext)
+}
+
+static void insertInitCodeTo(ScanSetting registerSetting) {
+        if (registerSetting != null && !registerSetting.classList.isEmpty()) {
+            RegisterCodeGenerator processor = new RegisterCodeGenerator(registerSetting)
+            File file = RegisterTransform.fileContainsInitClass
+            if (file.getName().endsWith('.jar'))
+                processor.insertInitCodeIntoJarFile(file)	// 插入初始化代码到jar文件
+        }
+}
+
+//访问方法
+private File insertInitCodeIntoJarFile(File jarFile) {
+    ...
+    def bytes = referHackWhenInit(inputStream)
+    	ClassVisitor cv = new MyClassVisitor(Opcodes.ASM5, cw)
+    		mv = new RouteMethodVisitor(Opcodes.ASM5, mv)
+    			mv.visitLdcInsn(name)//类名
+    			mv.visitMethodInsn(Opcodes.INVOKESTATIC
+                            , ScanSetting.GENERATE_TO_CLASS_NAME	//com/alibaba/android/arouter/core/LogisticsCenter
+                            , ScanSetting.REGISTER_METHOD_NAME	//register
+                            , "(Ljava/lang/String;)V"
+                            , false)
+    ...
+}
+
+//LogisticsCenter
+private static void register(String className) {
+        if (!TextUtils.isEmpty(className)) {
+            try {
+                Class<?> clazz = Class.forName(className);
+                Object obj = clazz.getConstructor().newInstance();
+                if (obj instanceof IRouteRoot) {
+                    registerRouteRoot((IRouteRoot) obj);
+                } else if (obj instanceof IProviderGroup) {
+                    registerProvider((IProviderGroup) obj);
+                } else if (obj instanceof IInterceptorGroup) {
+                    registerInterceptor((IInterceptorGroup) obj);
+                } else {
+                    logger.info(TAG, "register failed, class name: " + className
+                            + " should implements one of IRouteRoot/IProviderGroup/IInterceptorGroup.");
+                }
+            } catch (Exception e) {
+                logger.error(TAG,"register class error:" + className, e);
+            }
+        }
+}
+
+private static void registerRouteRoot(IRouteRoot routeRoot) {
+        markRegisteredByPlugin();
+        if (routeRoot != null) {
+            routeRoot.loadInto(Warehouse.groupsIndex);
+        }
+}
+// 最终给Warehouse里面的routes, groupsIndex 赋值
+// static Map<String, RouteMeta> routes = new HashMap<>();
+// static Map<String, Class<? extends IRouteGroup>> groupsIndex = new HashMap<>();
+public class ARouter$$Root$$app implements IRouteRoot {
+  @Override
+  public void loadInto(Map<String, Class<? extends IRouteGroup>> routes) {
+    routes.put("app", ARouter$$Group$$app.class);
+  }
+}
+```
+
+#### 3.4 SP缓存问题
+
+```xml
+<map>
+    <set name="ROUTER_MAP">
+        <string>com.alibaba.android.arouter.routes.ARouter$$Group$$app</string>
+        <string>com.alibaba.android.arouter.routes.ARouter$$Group$$shortcode</string>
+        <string>com.alibaba.android.arouter.routes.ARouter$$Root$$arouterapi</string>
+        <string>com.alibaba.android.arouter.routes.ARouter$$Group$$app$1</string>
+        <string>com.alibaba.android.arouter.routes.ARouter$$Providers$$arouterapi</string>
+        <string>com.alibaba.android.arouter.routes.ARouter$$Root$$shortcode</string>
+        <string>com.alibaba.android.arouter.routes.ARouter$$Group$$thirdparty</string>
+        <string>com.alibaba.android.arouter.routes.ARouter$$Providers$$app</string>
+        <string>com.alibaba.android.arouter.routes.ARouter$$Providers$$shortcode</string>
+        <string>com.alibaba.android.arouter.routes.ARouter$$Group$$arouter</string>
+        <string>com.alibaba.android.arouter.routes.ARouter$$Root$$app</string>
+    </set>
+    <string name="LAST_VERSION_NAME">1.0</string>
+    <int name="LAST_VERSION_CODE" value="1" />
+</map>
+```
+
+
+
 ---
 
 ### 四.遇到问题
