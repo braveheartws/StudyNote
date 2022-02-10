@@ -387,7 +387,14 @@ public void postSticky(Object event) {
 }
 ```
 
+---
 
+### 三. 总结
+
+> 在订阅的时候通过反射获取对应方法注解, 将订阅者对象,和订阅的方法封装在一个Subscription对象里面, 同时会将事件类型作为key,事件对应的所有订阅过的列表保存在`subscriptionsByEventType`里面,当发送事件时根据,事件类型去`subscriptionsByEventType`获取`CopyOnWriteArrayList<Subscription>`列表,然后遍历这个列表里面的`Subscription`对象,根据`threadMode`判断属于哪个线程处理,如果是不需要做线程切换则直接将最开始的反射保存的`Methd`对象,通过反射调用. 如果是异步线程则需要将事件发送到所在的队列,由对应的线程从队列里面取出消息,再通过封装的`PendingPost`对象,通过`Subscription`里面的`Method`反射调用来传输数据
+>
+> 1. 粘性事件会一直存在内存,需要移除
+> 2. 注册后需要取消注册,避免内存泄漏
 
 
 
