@@ -241,6 +241,32 @@ public class ARouter$$Root$$app implements IRouteRoot {
 }
 ```
 
+##### 3.3.1 插件修改后的class文件
+
+> 会自动将扫描到路由信息添加到集合
+
+```java
+// 修改前的方法
+private static void loadRouterMap() {
+    registerByPlugin = false;
+    // auto generate register code by gradle plugin: arouter-auto-register
+    // looks like below:
+    // registerRouteRoot(new ARouter..Root..modulejava());
+    // registerRouteRoot(new ARouter..Root..modulekotlin());
+}
+
+// 经过gradle插件操作后
+private static void loadRouterMap() {
+    registerByPlugin = false;
+    register("com.alibaba.android.arouter.routes.ARouter$$Root$$arouterapi");
+    register("com.alibaba.android.arouter.routes.ARouter$$Root$$shortcode");
+    register("com.alibaba.android.arouter.routes.ARouter$$Root$$app");
+    register("com.alibaba.android.arouter.routes.ARouter$$Providers$$arouterapi");
+    register("com.alibaba.android.arouter.routes.ARouter$$Providers$$shortcode");
+    register("com.alibaba.android.arouter.routes.ARouter$$Providers$$app");
+}
+```
+
 #### 3.4 SP缓存问题
 
 ```xml
