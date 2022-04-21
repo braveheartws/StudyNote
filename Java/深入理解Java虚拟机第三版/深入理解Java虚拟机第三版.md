@@ -941,11 +941,60 @@ descriptor: (II)I
 
 ## 8.3 方法调用
 
+### 8.3.1 解析
 
+> 所有方法调用的目标方法在Class文件里面都是一个常量池中的符号引用，在类加载的解析阶段，会将其中的一部分符号引用转化为直接引用，这种解析能够成立的前提是：方法在程序真正运行之前就有一个可确定的调用版本，并且这个方法的调用版本在运行期是不可改变的。换句话说，调用目标在程序代码写好、编译器进行编译那一刻就已经确定下来。这类方法的调用被称为解析（Resolution）
 
+只要能被invokestatic和invokespecial指令调用的方法，都可以在解析阶段中确定唯一的调用版本，Java语言里符合这个条件的方法共有静态方法、私有方法、实例构造器、父类方法4种，再加上被final修饰的方法（尽管它使用invokevirtual指令调用），这5种方法调用会在类加载的时候就可以把符号引用解析为该方法的直接引用。这些方法统称为“非虚方法”（Non-Virtual Method），与之相反，其他方法就被称为“虚方法”（Virtual Method）。 
 
+**动态链接方法解析步骤**
 
+1）找到操作数栈顶的第一个元素所指向的对象的实际类型，记作C。 
 
+2）如果在类型C中找到与常量中的描述符和简单名称都相符的方法，则进行访问权限校验，如果通过则返回这个方法的直接引用，查找过程结束；不通过则返回java.lang.IllegalAccessError异常。 
+
+3）否则，按照继承关系从下往上依次对C的各个父类进行第二步的搜索和验证过程。
+
+4）如果始终没有找到合适的方法，则抛出java.lang.AbstractMethodError异常。
+
+单分派与多分派
+
+择目标方法的依据有两点：一是静态类型是什么，二是方法参数是什么。
+
+![](./imgs/24.png)
+
+虚方法表中存放着各个方法的实际入口地址。如果某个方法在子类中没有被重写，那子类的虚方法表中的地址入口和父类相同方法的地址入口是一致的，都指向父类的实现入口。如果子类中重写了这个方法，子类虚方法表中的地址也会被替换为指向子类实现版本的入口地址。
+
+### 8.4.3 java.lang.invoke包
+
+```java
+public static class MethodHandleTest {
+    static class ClassA{
+        public void println(String s) {
+            System.out.println(s);
+        }
+    }
+
+    public static void main(String[] args) throws Throwable {
+        Object obj = System.currentTimeMillis() % 2 == 0 ? System.out : new ClassA();
+        // 无论obj最终是哪个实现类，下面这句都能正确调用到println方法。
+        getPrintlnMH(obj).invokeExact("icyfenix");
+    }
+
+    public static MethodHandle getPrintlnMH(Object receiver) throws NoSuchMethodException, IllegalAccessException {
+        // MethodType：代表“方法类型”，包含了方法的返回值（methodType()的第一个参数）和 具体参数（methodType()第二个及以后的参数）。
+        MethodType mt = MethodType.methodType(void.class, String.class);
+        // lookup()方法来自于MethodHandles.lookup，这句的作用是在指定类中查找符合给定的方法 名称、方法类型，并且符合调用权限的方法句柄。
+        // 因为这里调用的是一个虚方法，按照Java语言的规则，方法第一个参数是隐式的，代表该方法的接 收者，
+        // 也即this指向的对象，这个参数以前是放在参数列表中进行传递，现在提供了bindTo() 方法来完成这件事情。
+        return lookup().findVirtual(receiver.getClass(), "println", mt).bindTo(receiver);
+    }
+}
+```
+
+上面这段代码演示了动态绑定，正常来说在编译期就能确定println是哪个类，这种方式把绑定延迟到了运行期。
+
+### 8.4.4 invokedynamic指令
 
 
 
