@@ -434,3 +434,106 @@ int main(int argc, char *argv[]) {
 }
 ```
 
+---
+
+## 第六节 C风格字符串(C-style string)
+
+### 6.1 基本介绍
+
+示例代码：
+
+```c
+char str1[4] = {'a','b','c','\0'};	// 是C风格字符串
+char arr2[4] = {'a','b','c','d'};	// 不是C风格字符串
+
+```
+
+* 这两个都是char数组，但只有第二个是字符串。空字符对C-风格字符串至关重要。C++有很多处理字符串的函数，包括cout使用的那些函数，它们都逐个地处理字符串中的字符，直到发现空字符为止。
+
+* 如果使用cout显示上面的dog数组（它不是字符串），cout将打印出数组中的8个字母，并接着将[内存](https://so.csdn.net/so/search?q=内存&spm=1001.2101.3001.7020)中随后的各个字节解释为要打印的字符，直到遇到空字符为止。
+
+\*将数组初始化为字符串的方法要使用大量的单引号，且必须记住加上空字符，这种方法十分麻烦。有一种更好的将字符数组初始化为字符串的方法——只需使用一个用双引号阔气的字符串即可，这种字符串被称为**字符串常量（string constant）**或**字符串字面值（string literal）**
+
+```c
+char bird[11] = "bird";   	// 结尾自动包含\0 ,虽然申明长度11，但是实际长度只有4
+char fish[] = "Bubbles";    // 让编译器自动计数
+char *dog = "dog";			// 有效
+char ch = 'C';				// 有效，是一个字符
+char ch1 = "C";				// 错误：类型不匹配，试图将一个内存地址赋给shirt_size
+```
+
+### 6.2 字符数组
+
+示例代码：
+
+```c
+char* name[3] = {"abc","def","ghi"};
+
+printf(" *name = %s\n",*name); //  *name = abc
+printf(" *(name + 1) = %s\n",*(name + 1));   // *(name + 1) = def
+printf(" *(name + 2) =  %s\n",*(name + 2));   // *(name + 2) =  ghi
+printf(" abc ptr =  %p\n",(name + 0));   // abc ptr =  000000000061FE00
+printf(" def ptr =   %p\n",(name + 1));   // def ptr =   000000000061FE08
+printf(" ghi ptr =   %p\n",(name + 2));   // ghi ptr =   000000000061FE10
+printf("--------------------------------------------\n");
+printf("&name[0][0] = %p\n", &name[0][0]);	// &name[0][0] = 00000000004050EC
+printf("&name[1][0] = %p\n", &name[1][0]);	// &name[1][0] = 00000000004050F0
+printf("&name[2][0] = %p\n", &name[2][0]);	// &name[2][0] = 00000000004050F4
+
+printf("(*(name + 0) + 0) = %p\n", (*(name + 0) + 0));	// (*(name + 0) + 0) = 00000000004050EC
+printf("(*(name + 1) + 0) = %p\n", (*(name + 1) + 0)); // (*(name + 1) + 0) = 00000000004050F0
+printf("(*(name + 2) + 0) = %p\n", (*(name + 2) + 0)); // (*(name + 2) + 0) = 00000000004050F4
+
+
+printf("name -->  %p\n",name);
+printf("&name -->  %p\n",&name);
+printf("name[0] --> %p\n",name[0]);
+printf("*name -->  %p\n",*name);
+printf("--------------------------------------------\n");
+printf(" *(*(name + 0) + 0) =  %c\n",*(*(name + 0) + 0));   //  *(*(name + 0) + 0) =  a
+printf(" *(*(name + 0) + 1) = %c\n",*(*(name + 0) + 1));   // *(*(name + 0) + 1) = b
+printf(" *(*(name + 0) + 2) =  %c\n",*(*(name + 0) + 2));   // *(*(name + 0) + 2) =  c
+
+*name = abc
+*(name + 1) = def
+*(name + 2) =  ghi
+abc ptr =  000000000061FE00
+def ptr =   000000000061FE08
+ghi ptr =   000000000061FE10
+--------------------------------------------
+&name[0][0] = 00000000004050EC
+&name[1][0] = 00000000004050F0
+&name[2][0] = 00000000004050F4
+(*(name + 0) + 0) = 00000000004050EC
+(*(name + 1) + 0) = 00000000004050F0
+(*(name + 2) + 0) = 00000000004050F4
+
+// 重点
+name -->  000000000061FE00
+&name -->  000000000061FE00
+name[0] --> 00000000004050EC
+*name -->  00000000004050EC
+
+--------------------------------------------
+*(*(name + 0) + 0) =  a
+*(*(name + 0) + 1) = b
+*(*(name + 0) + 2) =  c
+```
+
+可以发现：
+
+* name的地址并不是`name[0][0]`的地址
+* 字符串数组 !=  二维字符数组
+* name 只是一个字符串数组名有自己的地址
+
+```c
+通过多次实验能得出结论：
+char *animals[3] = {"dog","cat","pig"};
+这个animals很像char类型的二级指针。
+
+在传参的时候直接是char**;
+void Test(char** animals) {
+    println("index0=%s\n", *(animals + 0)); // *(animals + 0) = *animals
+}
+```
+
